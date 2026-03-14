@@ -28,114 +28,99 @@ Filter & Sort: Advanced filtering and sorting options (Strategy Pattern) (UC10).
 Admin Features: User oversight and global search capabilities.
 
 @author Dhruv
-@version 2.0
+@version 3.0
  */
 
 public class MyContactsApp {
-    private static final Scanner sc=new Scanner(System.in);
-    private static final PasswordHashing vaultSecurity=new PasswordHashing();
-    private static Account activeClient=null;
+	
+	    private static final Scanner sc = new Scanner(System.in);
+	    private static final PasswordHashing vaultSecurity = new PasswordHashing();
+	    private static Account activeClient = null;
 
-    public static void processRegistration() {
-        System.out.println("\n--- Registration ---");
-        System.out.print("Email: ");
-        String m = sc.next();
-        System.out.print("Password: ");
-        String p = sc.next();
-        System.out.print("Type (PREMIUM/FREE): ");
-        String lvl = sc.next();
-        System.out.print("Username: ");
-        String uname = sc.next();
-        System.out.print("Bio: ");
-        String b = sc.next();
-        System.out.print("Mobile: ");
-        String mob = sc.next();
+	    public static void manageProfile() {
+	        System.out.println("\n--- Edit Profile Settings ---");
+	        System.out.println("1. Update Details");
+	        System.out.println("2. Change Password");
+	        System.out.println("0. Back");
+	        System.out.print("Choice: ");
+	        
+	        int choice = sc.nextInt();
+	        
+	        if (choice == 1) {
+	            System.out.print("New Bio: ");
+	            String b = sc.next();
+	            System.out.print("New Mobile: ");
+	            String m = sc.next();
+	            
+	            //Rebuilding the Detail object
+	            AccountDetail updated = new DetailBuilder()
+	                    .setHandle(activeClient.getDetail().getHandle())
+	                    .setInfo(b)
+	                    .setMobile(m)
+	                    .build();
+	            
+	            activeClient.setDetail(updated);
+	            System.out.println("Status: Profile updated successfully.");
+	            
+	        } else if (choice == 2) {
+	            System.out.print("Enter New Password: ");
+	            String newP = sc.next();
+	            try {
+	                Regex.checkPass(newP);
+	                String hashed = vaultSecurity.encryptKey(newP);
+	                activeClient.setSecret(hashed);
+	                System.out.println("Status: Password changed successfully.");
+	            } catch (Exception e) {
+	                System.out.println("Error: " + e.getMessage());
+	            }
+	        }
+	    }
 
-        try {
-            Regex.checkMail(m);
-            Regex.checkPass(p);
-            Regex.checkCell(mob);
+	    public static boolean displayMenu() {
+	        if (activeClient == null) {
+	            System.out.println("\n--- Guest Menu ---");
+	            System.out.println("1. Sign Up");
+	            System.out.println("2. Log In");
+	            System.out.println("0. Exit");
+	            System.out.print("Choice: ");
+	            int nav = sc.nextInt();
+	            return switch(nav) {
+	                case 1 -> { processRegistration(); yield true; }
+	                case 2 -> { processLogin(); yield true; }
+	                case 0 -> false;
+	                default -> true;
+	            };
+	        } else {
+	            System.out.println("\n--- Dashboard (" + activeClient.getMail() + ") ---");
+	            System.out.println("1. View Profile");
+	            System.out.println("2. Manage Settings");
+	            System.out.println("0. Log Out");
+	            System.out.print("Choice: ");
+	            
+	            int nav = sc.nextInt();
+	            switch(nav) {
+	                case 1 -> System.out.println("Profile: " + activeClient.getDetail().toString());
+	                case 2 -> manageProfile();
+	                case 0 -> {
+	                    activeClient = null;
+	                    System.out.println("Logged out.");
+	                }
+	            }
+	            return true;
+	        }
+	    }
 
-            String hashedPass = vaultSecurity.encryptKey(p);
-            
-            AccountDetail detail = new DetailBuilder().setHandle(uname).setInfo(b).setMobile(mob).build();
-            Account newAcc = new AccountBuilder().setMail(m).setSecret(hashedPass).setDetail(detail).setCategory(lvl.toUpperCase()).build();
-
-            Storage.storeAccount(newAcc);
-            System.out.println("Success: User " + newAcc.getMail() + " registered.");
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
-    }
-
-    // UC2: Authentication Logic
-    public static void processLogin() {
-        System.out.println("\n--- Login ---");
-        System.out.print("Email: ");
-        String email = sc.next();
-        System.out.print("Password: ");
-        String pass = sc.next();
-
-        Account found = Storage.getAccount(email);
-
-        if (found != null) {
-            String attemptHash = vaultSecurity.encryptKey(pass);
-            if (found.getSecret().equals(attemptHash)) {
-                activeClient = found;
-                System.out.println("Login Successful! Welcome, " + activeClient.getDetail().getHandle());
-            } else {
-                System.out.println("Error: Wrong password.");
-            }
-        } else {
-            System.out.println("Error: User does not exist.");
-        }
-    }
-
-    public static boolean displayMenu() {
-        if (activeClient == null) {
-            System.out.println("\n--- Guest Menu ---");
-            System.out.println("1. Sign Up");
-            System.out.println("2. Log In");
-            System.out.println("0. Exit");
-            System.out.print("Choice: ");
-            
-            int nav = sc.nextInt();
-            return switch(nav) {
-                case 1 -> { processRegistration(); yield true; }
-                case 2 -> { processLogin(); yield true; }
-                case 0 -> false;
-                default -> true;
-            };
-        } else {
-            System.out.println("\n--- User Dashboard (" + activeClient.getMail() + ") ---");
-            System.out.println("1. View Profile");
-            System.out.println("0. Log Out");
-            System.out.print("Choice: ");
-            
-            int nav = sc.nextInt();
-            if (nav == 1) {
-                System.out.println("Profile Info: " + activeClient.getDetail().toString());
-            } else if (nav == 0) {
-                activeClient = null;
-                System.out.println("Logged out.");
-            }
-            return true;
-        }
-    }
-
-    public static void main(String[] args) {
-        System.out.println("============================================");
-        System.out.println("     CONTACT MANAGEMENT SYSTEM - UC 2       ");
-        System.out.println("============================================");
-        
-        boolean isRunning = true;
-        while(isRunning) {
-            isRunning = displayMenu();
-        }
-    }
-}
-
-
+	    public static void main(String[] args) {
+	        System.out.println("============================================");
+	        System.out.println("     CONTACT MANAGEMENT SYSTEM - UC 3       ");
+	        System.out.println("============================================");
+	        
+	        boolean isRunning = true;
+	        while(isRunning) {
+	            isRunning = displayMenu();
+	        }
+	    }
+	}
 
 
 

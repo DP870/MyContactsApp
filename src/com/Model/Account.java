@@ -14,5 +14,9 @@ public abstract class Account {
     public String getMail() { return mail; }
     public String getSecret() { return secret; }
     public AccountDetail getDetail() { return detail; }
+
+    public void setSecret(String newSecret) { this.secret = newSecret; }
+    public void setDetail(AccountDetail newDetail) { this.detail = newDetail; }
+    
     public abstract String getRank();
 }
