@@ -29,7 +29,8 @@ public abstract class Account {
         if (index >= 0 && index < contactList.size()) {
             contactList.remove(index);
         }}
+    public void clearAllEntries() {
+        this.contactList.clear();
+    }
     public abstract String getRank();
 }
-
-
