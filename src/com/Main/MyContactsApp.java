@@ -26,7 +26,7 @@ Filter & Sort: Advanced filtering and sorting options (Strategy Pattern) (UC10).
 Admin Features: User oversight and global search capabilities.
 
 @author Dhruv
-@version 9.0
+@version 10.0
  */
 public class MyContactsApp {
 
@@ -215,44 +215,54 @@ public class MyContactsApp {
         }
     }
 
-    //Search
     public static void searchSystem() {
         if (activeClient.getContacts().isEmpty()) {
             System.out.println("System: No contacts to search.");
             return;
         }
+        System.out.println("\n--- Search ---");
+        System.out.print("Enter term (Name/Phone/Email): ");
+        String query = sc.next();
+        boolean found = false;
+        for (Entry e : activeClient.getContacts()) {
+            if (e.getName().equalsIgnoreCase(query) || e.getPhone().contains(query) || e.getEmail().equalsIgnoreCase(query)) {
+                System.out.println(e.toString());
+                found = true;
+            }
+        }
+        if (!found) System.out.println("System: No matches.");
+    }
 
-        System.out.println("\n--- Search Menu ---");
-        System.out.println("1. Search by Name");
-        System.out.println("2. Search by Phone");
-        System.out.println("3. Search by Email");
+    // UC 10: Basic Filtering Logic
+    public static void filterContacts() {
+        if (activeClient.getContacts().isEmpty()) {
+            System.out.println("System: No contacts to filter.");
+            return;
+        }
+
+        System.out.println("\n--- Filter Contacts ---");
+        System.out.println("1. Show Personal Contacts Only");
+        System.out.println("2. Show Business Contacts Only");
         System.out.println("0. Back");
         System.out.print("Choice: ");
         int opt = sc.nextInt();
 
         if (opt == 0) return;
 
-        System.out.print("Enter Search Term: ");
-        String query = sc.next();
+        String targetType = (opt == 1) ? "PERSONAL" : "BUSINESS";
         boolean found = false;
 
-        System.out.println("\n--- Search Results ---");
+        System.out.println("\n--- Results for " + targetType + " ---");
         for (Entry e : activeClient.getContacts()) {
-            boolean match = switch (opt) {
-                case 1 -> e.getName().equalsIgnoreCase(query);
-                case 2 -> e.getPhone().contains(query);
-                case 3 -> e.getEmail().equalsIgnoreCase(query);
-                default -> false;
-            };
-
-            if (match) {
+            // Polymorphism: Calling getEntryType which returns type based on concrete class
+            if (e.getEntryType().equals(targetType)) {
                 System.out.println(e.toString());
                 found = true;
             }
         }
 
         if (!found) {
-            System.out.println("System: No matches found for '" + query + "'.");
+            System.out.println("System: No contacts found in this category.");
         }
     }
 
@@ -270,7 +280,7 @@ public class MyContactsApp {
             };
         } else {
             System.out.println("\n--- Dashboard (" + activeClient.getMail() + ") ---");
-            System.out.println("1. Profile 2. Settings 3. Add Contact 4. View Contacts 5. Edit Contact 6. Delete Contact 7. Wipe All 8. Search Contacts 0. Log Out");
+            System.out.println("1. Profile 2. Settings 3. Add Contact 4. View Contacts 5. Edit Contact 6. Delete Contact 7. Wipe All 8. Search Contacts 9. Filter 0. Log Out");
             System.out.print("Choice: ");
             
             int nav = sc.nextInt();
@@ -282,7 +292,8 @@ public class MyContactsApp {
                 case 5 -> editContact();
                 case 6 -> deleteContact();
                 case 7 -> deleteAllContacts();
-                case 8 -> searchSystem(); // UC 9 Trigger
+                case 8 -> searchSystem(); 
+                case 9 -> filterContacts();
                 case 0 -> { activeClient = null; System.out.println("Logged out."); }
             }
             return true;
