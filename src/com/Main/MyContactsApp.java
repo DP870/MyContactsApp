@@ -36,235 +36,127 @@ public class MyContactsApp {
 
     public static void processRegistration() {
         System.out.println("\n--- Registration ---");
-        System.out.print("Email: ");
-        String m = sc.next();
-        System.out.print("Password: ");
-        String p = sc.next();
-        System.out.print("Type (PREMIUM/FREE): ");
-        String lvl = sc.next();
-        System.out.print("Username: ");
-        String uname = sc.next();
-        System.out.print("Bio: ");
-        String b = sc.next();
-        System.out.print("Mobile: ");
-        String mob = sc.next();
+        System.out.print("Email: "); String m = sc.next();
+        System.out.print("Password: "); String p = sc.next();
+        System.out.print("Type (PREMIUM/FREE): "); String lvl = sc.next();
+        System.out.print("Username: "); String uname = sc.next();
+        System.out.print("Bio: "); String b = sc.next();
+        System.out.print("Mobile: "); String mob = sc.next();
 
         try {
-            Regex.checkMail(m);
-            Regex.checkPass(p);
-            Regex.checkCell(mob);
-
+            Regex.checkMail(m); Regex.checkPass(p); Regex.checkCell(mob);
             String hashedPass = vaultSecurity.encryptKey(p);
-            
-            AccountDetail detail = new DetailBuilder()
-                    .setHandle(uname)
-                    .setInfo(b)
-                    .setMobile(mob)
-                    .build();
-
-            Account newAcc = new AccountBuilder()
-                    .setMail(m)
-                    .setSecret(hashedPass)
-                    .setDetail(detail)
-                    .setCategory(lvl.toUpperCase())
-                    .build();
-
+            AccountDetail detail = new DetailBuilder().setHandle(uname).setInfo(b).setMobile(mob).build();
+            Account newAcc = new AccountBuilder().setMail(m).setSecret(hashedPass).setDetail(detail).setCategory(lvl.toUpperCase()).build();
             Storage.storeAccount(newAcc);
-            System.out.println("Success: User " + newAcc.getMail() + " registered.");
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
-        }
+            System.out.println("Success: Registered.");
+        } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
     }
 
     public static void processLogin() {
         System.out.println("\n--- Login ---");
-        System.out.print("Email: ");
-        String email = sc.next();
-        System.out.print("Password: ");
-        String pass = sc.next();
-
+        System.out.print("Email: "); String email = sc.next();
+        System.out.print("Password: "); String pass = sc.next();
         Account found = Storage.getAccount(email);
-
-        if (found != null) {
-            String attemptHash = vaultSecurity.encryptKey(pass);
-            if (found.getSecret().equals(attemptHash)) {
-                activeClient = found;
-                System.out.println("Login Successful! Welcome, " + activeClient.getDetail().getHandle());
-            } else {
-                System.out.println("Error: Wrong password.");
-            }
-        } else {
-            System.out.println("Error: User does not exist.");
-        }
+        if (found != null && found.getSecret().equals(vaultSecurity.encryptKey(pass))) {
+            activeClient = found;
+            System.out.println("Welcome, " + activeClient.getDetail().getHandle());
+        } else { System.out.println("Invalid Credentials."); }
     }
 
     public static void manageProfile() {
-        System.out.println("\n--- Settings ---");
-        System.out.println("1. Update Bio/Mobile");
-        System.out.println("2. Change Password");
-        System.out.println("0. Back");
-        System.out.print("Choice: ");
+        System.out.println("\n--- Settings --- 1. Update Bio 2. Change Pass");
         int choice = sc.nextInt();
-        
         if (choice == 1) {
-            System.out.print("New Bio: ");
-            String b = sc.next();
-            System.out.print("New Mobile: ");
-            String m = sc.next();
+            System.out.print("Bio: "); String b = sc.next();
+            System.out.print("Mobile: "); String m = sc.next();
             activeClient.setDetail(new DetailBuilder().setHandle(activeClient.getDetail().getHandle()).setInfo(b).setMobile(m).build());
-            System.out.println("Status: Updated.");
         } else if (choice == 2) {
-            System.out.print("New Password: ");
-            String newP = sc.next();
-            try {
-                Regex.checkPass(newP);
-                activeClient.setSecret(vaultSecurity.encryptKey(newP));
-                System.out.println("Status: Password changed.");
-            } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
+            System.out.print("New Pass: "); String n = sc.next();
+            try { Regex.checkPass(n); activeClient.setSecret(vaultSecurity.encryptKey(n)); } catch (Exception e) {}
         }
     }
 
     public static void createContact() {
         System.out.println("\n--- Add Contact ---");
-        System.out.print("Name: ");
-        String name = sc.next();
-        System.out.print("Phone: ");
-        String phone = sc.next();
-        System.out.print("Email: ");
-        String email = sc.next();
-        System.out.print("Type (PERSONAL/BUSINESS): ");
-        String type = sc.next();
-
+        System.out.print("Name: "); String n = sc.next();
+        System.out.print("Phone: "); String p = sc.next();
+        System.out.print("Email: "); String e = sc.next();
+        System.out.print("Type (PERSONAL/BUSINESS): "); String t = sc.next();
         try {
-            Regex.checkMail(email);
-            Regex.checkCell(phone);
-            activeClient.addEntry(new EntryBuilder().setName(name).setPhone(phone).setEmail(email).setType(type).build());
-            System.out.println("System: Contact added.");
-        } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
+            Regex.checkMail(e); Regex.checkCell(p);
+            activeClient.addEntry(new EntryBuilder().setName(n).setPhone(p).setEmail(e).setType(t).build());
+        } catch (Exception ex) { System.out.println(ex.getMessage()); }
     }
 
     public static void viewContacts() {
-        if (activeClient.getContacts().isEmpty()) {
-            System.out.println("System: No contacts saved yet.");
-            return;
-        }
-        System.out.println("\n--- Your Contact List ---");
-        int count = 1;
-        for (Entry e : activeClient.getContacts()) {
-            System.out.println(count + ". " + e.toString());
-            count++;
-        }
+        if (activeClient.getContacts().isEmpty()) return;
+        int i = 1;
+        for (Entry e : activeClient.getContacts()) System.out.println((i++) + ". " + e.toString());
     }
 
     public static void editContact() {
-        if (activeClient.getContacts().isEmpty()) {
-            System.out.println("System: List is empty.");
-            return;
-        }
         viewContacts();
-        System.out.print("Enter Contact Number to Edit: ");
-        int index = sc.nextInt() - 1;
-
-        if (index >= 0 && index < activeClient.getContacts().size()) {
-            System.out.print("New Phone: ");
-            String p = sc.next();
-            System.out.print("New Email: ");
-            String e = sc.next();
-            System.out.print("New Type (PERSONAL/BUSINESS): ");
-            String t = sc.next();
-
-            try {
-                Regex.checkMail(e);
-                Regex.checkCell(p);
-                Entry updated = new EntryBuilder().setName(activeClient.getContacts().get(index).getName()).setPhone(p).setEmail(e).setType(t).build();
-                activeClient.updateEntry(index, updated);
-                System.out.println("System: Updated.");
-            } catch (Exception ex) { System.out.println("Error: " + ex.getMessage()); }
-        } else {
-            System.out.println("Error: Invalid index.");
+        System.out.print("Edit Index: ");
+        int idx = sc.nextInt() - 1;
+        if (idx >= 0 && idx < activeClient.getContacts().size()) {
+            System.out.print("Phone: "); String p = sc.next();
+            System.out.print("Email: "); String e = sc.next();
+            activeClient.updateEntry(idx, new EntryBuilder().setName(activeClient.getContacts().get(idx).getName()).setPhone(p).setEmail(e).setType("PERSONAL").build());
         }
     }
 
     public static void deleteContact() {
-        if (activeClient.getContacts().isEmpty()) {
-            System.out.println("System: List is empty.");
-            return;
-        }
         viewContacts();
-        System.out.print("Enter Contact Number to Delete: ");
-        int index = sc.nextInt() - 1;
-
-        if (index >= 0 && index < activeClient.getContacts().size()) {
-            activeClient.removeEntry(index);
-            System.out.println("System: Contact removed.");
-        } else {
-            System.out.println("Error: Invalid selection.");
-        }
+        System.out.print("Delete Index: ");
+        int idx = sc.nextInt() - 1;
+        if (idx >= 0 && idx < activeClient.getContacts().size()) activeClient.removeEntry(idx);
     }
 
-    public static void deleteAllContacts() {
-        if (activeClient.getContacts().isEmpty()) {
-            System.out.println("System: List is already empty.");
-            return;
-        }
-        System.out.print("Delete all contacts? (y/n): ");
-        String confirm = sc.next();
-        if (confirm.equalsIgnoreCase("y")) {
-            activeClient.clearAllEntries();
-            System.out.println("System: All contacts cleared.");
-        }
-    }
+    public static void deleteAllContacts() { activeClient.clearAllEntries(); }
 
     public static void searchSystem() {
-        if (activeClient.getContacts().isEmpty()) {
-            System.out.println("System: No contacts to search.");
-            return;
-        }
-        System.out.println("\n--- Search ---");
-        System.out.print("Enter term (Name/Phone/Email): ");
-        String query = sc.next();
-        boolean found = false;
-        for (Entry e : activeClient.getContacts()) {
-            if (e.getName().equalsIgnoreCase(query) || e.getPhone().contains(query) || e.getEmail().equalsIgnoreCase(query)) {
-                System.out.println(e.toString());
-                found = true;
-            }
-        }
-        if (!found) System.out.println("System: No matches.");
+        System.out.print("Query: "); String q = sc.next();
+        for (Entry e : activeClient.getContacts()) if (e.getName().contains(q)) System.out.println(e);
     }
 
-    // UC 10: Basic Filtering Logic
     public static void filterContacts() {
-        if (activeClient.getContacts().isEmpty()) {
-            System.out.println("System: No contacts to filter.");
-            return;
-        }
+        System.out.print("1. Personal 2. Business: ");
+        String t = (sc.nextInt() == 1) ? "PERSONAL" : "BUSINESS";
+        for (Entry e : activeClient.getContacts()) if (e.getEntryType().equals(t)) System.out.println(e);
+    }
 
-        System.out.println("\n--- Filter Contacts ---");
-        System.out.println("1. Show Personal Contacts Only");
-        System.out.println("2. Show Business Contacts Only");
-        System.out.println("0. Back");
-        System.out.print("Choice: ");
-        int opt = sc.nextInt();
-
-        if (opt == 0) return;
-
-        String targetType = (opt == 1) ? "PERSONAL" : "BUSINESS";
-        boolean found = false;
-
-        System.out.println("\n--- Results for " + targetType + " ---");
-        for (Entry e : activeClient.getContacts()) {
-            // Polymorphism: Calling getEntryType which returns type based on concrete class
-            if (e.getEntryType().equals(targetType)) {
-                System.out.println(e.toString());
-                found = true;
-            }
-        }
-
-        if (!found) {
-            System.out.println("System: No contacts found in this category.");
+    public static void tagContact() {
+        viewContacts();
+        System.out.print("Index: "); int idx = sc.nextInt() - 1;
+        if (idx >= 0 && idx < activeClient.getContacts().size()) {
+            System.out.print("Tag: "); activeClient.getContacts().get(idx).addTag(sc.next());
         }
     }
+
+    public static void editTags() {
+        if (activeClient.getContacts().isEmpty()) return;
+        viewContacts();
+        System.out.print("Select Contact Number to edit tags: ");
+        int idx = sc.nextInt() - 1;
+
+        if (idx >= 0 && idx < activeClient.getContacts().size()) {
+            Entry e = activeClient.getContacts().get(idx);
+            System.out.println("Current Tags: " + e.getTags());
+            System.out.println("1. Add another tag 2. Reset all tags");
+            int opt = sc.nextInt();
+            
+            if (opt == 1) {
+                System.out.print("Enter tag: ");
+                e.addTag(sc.next());
+                System.out.println("Tag added.");
+            } else if (opt == 2) {
+                e.clearTags();
+                System.out.println("Tags cleared.");
+            }
+        }
+    }
+
 
     public static boolean displayMenu() {
         if (activeClient == null) {
@@ -280,7 +172,7 @@ public class MyContactsApp {
             };
         } else {
             System.out.println("\n--- Dashboard (" + activeClient.getMail() + ") ---");
-            System.out.println("1. Profile 2. Settings 3. Add Contact 4. View Contacts 5. Edit Contact 6. Delete Contact 7. Wipe All 8. Search Contacts 9. Filter 0. Log Out");
+            System.out.println("1. Profile 2. Settings 3. Add Contact 4. View Contacts 5. Edit Contact 6. Delete Contact 7. Wipe All 8. Search Contacts 9. Filter 10.Edit Tags 0. Log Out");
             System.out.print("Choice: ");
             
             int nav = sc.nextInt();
@@ -294,6 +186,7 @@ public class MyContactsApp {
                 case 7 -> deleteAllContacts();
                 case 8 -> searchSystem(); 
                 case 9 -> filterContacts();
+                case 10 -> editTags();
                 case 0 -> { activeClient = null; System.out.println("Logged out."); }
             }
             return true;
