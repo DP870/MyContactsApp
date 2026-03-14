@@ -19,4 +19,6 @@ public abstract class Account {
     public void setDetail(AccountDetail newDetail) { this.detail = newDetail; }
     
     public abstract String getRank();
+
+	
 }
