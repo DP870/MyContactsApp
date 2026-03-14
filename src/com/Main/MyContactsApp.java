@@ -4,9 +4,32 @@ import java.util.Scanner;
 import com.Model.*;
 import com.Validation.*;
 import com.Storage.*;
+/*
+ * MyContacts App Use Case Scenarios - Object Programming Approach
 
+Problem Domain Overview
+MyContacts App is a Java-based, console-driven application implemented use-case-wise to demonstrate object-oriented design, design patterns, and core Java concepts through a contact management system.
+
+Features
+This application consolidates multiple use cases (UC1 to UC10) into a single, cohesive user experience:
+
+User Management: Registration and Authentication (UC1, UC2).
+Profile: Manage personal details, passwords, and preferences (UC3).
+Contacts:
+Create and Manage Person & Organization contacts (UC4).
+View details with Decorator enhancements (UpperCase, Masked Email) (UC5).
+Edit contacts with Undo/Redo capabilities (Command Pattern) (UC6).
+Delete contacts (Soft & Hard Delete) (UC7).
+Groups: Create and manage contact groups with bulk operations (Composite Pattern) (UC8).
+Search: Advanced search using Specification Pattern (Name, Phone, Email, Tag, etc.) (UC9).
+Filter & Sort: Advanced filtering and sorting options (Strategy Pattern) (UC10).
+Admin Features: User oversight and global search capabilities.
+
+@author Dhruv
+@version 6.0
+ */
 public class MyContactsApp {
-    private static final Scanner sc = new Scanner(System.in);
+	private static final Scanner sc = new Scanner(System.in);
     private static final PasswordHashing vaultSecurity = new PasswordHashing();
     private static Account activeClient = null;
 
@@ -65,7 +88,7 @@ public class MyContactsApp {
             String attemptHash = vaultSecurity.encryptKey(pass);
             if (found.getSecret().equals(attemptHash)) {
                 activeClient = found;
-                System.out.println("Login Successful! Welcome,"+activeClient.getDetail().getHandle());
+                System.out.println("Login Successful! Welcome, " + activeClient.getDetail().getHandle());
             } else {
                 System.out.println("Error: Wrong password.");
             }
@@ -119,49 +142,64 @@ public class MyContactsApp {
         } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
     }
 
-    /**
-     * UC 5: View and Search Contacts
-     */
     public static void viewContacts() {
         if (activeClient.getContacts().isEmpty()) {
             System.out.println("System: No contacts saved yet.");
             return;
         }
+        System.out.println("\n--- Your Contact List ---");
+        int count = 1;
+        for (Entry e : activeClient.getContacts()) {
+            System.out.println(count + ". " + e.toString());
+            count++;
+        }
+    }
 
-        System.out.println("\n--- Contact Directory ---");
-        System.out.println("1. View All Contacts");
-        System.out.println("2. Search by Name");
-        System.out.println("0. Back");
-        System.out.print("Choice: ");
-        int choice = sc.nextInt();
+    // UC 6: Edit Contact Logic
+    public static void editContact() {
+        if (activeClient.getContacts().isEmpty()) {
+            System.out.println("System: List is empty. Nothing to edit.");
+            return;
+        }
 
-        if (choice == 1) {
-            System.out.println("\nListing all saved contacts:");
-            for (Entry e : activeClient.getContacts()) {
-                System.out.println(e.toString());
+        viewContacts();
+        System.out.print("Enter Contact Number to Edit: ");
+        int index = sc.nextInt() - 1;
+
+        if (index >= 0 && index < activeClient.getContacts().size()) {
+            System.out.println("Editing: " + activeClient.getContacts().get(index).getName());
+            System.out.print("New Phone: ");
+            String p = sc.next();
+            System.out.print("New Email: ");
+            String e = sc.next();
+            System.out.print("New Type (PERSONAL/BUSINESS): ");
+            String t = sc.next();
+
+            try {
+                Regex.checkMail(e);
+                Regex.checkCell(p);
+
+                Entry updated = new EntryBuilder()
+                        .setName(activeClient.getContacts().get(index).getName()) // Keep same name
+                        .setPhone(p)
+                        .setEmail(e)
+                        .setType(t)
+                        .build();
+
+                activeClient.updateEntry(index, updated);
+                System.out.println("System: Contact updated successfully.");
+            } catch (Exception ex) {
+                System.out.println("Error: " + ex.getMessage());
             }
-        } else if (choice == 2) {
-            System.out.print("Enter name to search: ");
-            String target = sc.next();
-            boolean found = false;
-            for (Entry e : activeClient.getContacts()) {
-                if (e.getName().equalsIgnoreCase(target)) {
-                    System.out.println("Result: " + e.toString());
-                    found = true;
-                }
-            }
-            if (!found) {
-                System.out.println("System: No contact found with name " + target);
-            }
+        } else {
+            System.out.println("Error: Invalid selection.");
         }
     }
 
     public static boolean displayMenu() {
         if (activeClient == null) {
             System.out.println("\n--- Guest Menu ---");
-            System.out.println("1. Sign Up");
-            System.out.println("2. Log In");
-            System.out.println("0. Exit");
+            System.out.println("1. Sign Up\n2. Log In\n0. Exit");
             System.out.print("Choice: ");
             int nav = sc.nextInt();
             return switch(nav) {
@@ -172,23 +210,17 @@ public class MyContactsApp {
             };
         } else {
             System.out.println("\n--- Dashboard (" + activeClient.getMail() + ") ---");
-            System.out.println("1. View Profile");
-            System.out.println("2. Manage Settings");
-            System.out.println("3. Add New Contact");
-            System.out.println("4. View Saved Contacts");
-            System.out.println("0. Log Out");
+            System.out.println("1. Profile 2. Settings 3. Add Contact 4. View Contacts 5. Edit Contact 0. Log Out");
             System.out.print("Choice: ");
             
             int nav = sc.nextInt();
             switch(nav) {
-                case 1 -> System.out.println("Profile: " + activeClient.getDetail().toString());
+                case 1 -> System.out.println("Info:"+activeClient.getDetail().toString());
                 case 2 -> manageProfile();
                 case 3 -> createContact();
-                case 4 -> viewContacts(); 
-                case 0 -> {
-                    activeClient = null;
-                    System.out.println("Logged out.");
-                }
+                case 4 -> viewContacts();
+                case 5 -> editContact();
+                case 0 -> { activeClient = null; System.out.println("Logged out."); }
             }
             return true;
         }
@@ -196,15 +228,9 @@ public class MyContactsApp {
 
     public static void main(String[] args) {
         System.out.println("============================================");
-        System.out.println("     CONTACT MANAGEMENT SYSTEM - UC 5");
+        System.out.println("CONTACT MANAGEMENT SYSTEM");
         System.out.println("============================================");
-        
         boolean isRunning = true;
-        while(isRunning) {
-            isRunning = displayMenu();
-        }
+        while(isRunning) { isRunning = displayMenu(); }
     }
 }
-
-
-
