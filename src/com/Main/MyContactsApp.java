@@ -26,7 +26,7 @@ Filter & Sort: Advanced filtering and sorting options (Strategy Pattern) (UC10).
 Admin Features: User oversight and global search capabilities.
 
 @author Dhruv
-@version 6.0
+@version 7.0
  */
 public class MyContactsApp {
 	private static final Scanner sc = new Scanner(System.in);
@@ -155,19 +155,16 @@ public class MyContactsApp {
         }
     }
 
-    // UC 6: Edit Contact Logic
     public static void editContact() {
         if (activeClient.getContacts().isEmpty()) {
-            System.out.println("System: List is empty. Nothing to edit.");
+            System.out.println("System: List is empty.");
             return;
         }
-
         viewContacts();
         System.out.print("Enter Contact Number to Edit: ");
         int index = sc.nextInt() - 1;
 
         if (index >= 0 && index < activeClient.getContacts().size()) {
-            System.out.println("Editing: " + activeClient.getContacts().get(index).getName());
             System.out.print("New Phone: ");
             String p = sc.next();
             System.out.print("New Email: ");
@@ -178,19 +175,30 @@ public class MyContactsApp {
             try {
                 Regex.checkMail(e);
                 Regex.checkCell(p);
-
-                Entry updated = new EntryBuilder()
-                        .setName(activeClient.getContacts().get(index).getName()) // Keep same name
-                        .setPhone(p)
-                        .setEmail(e)
-                        .setType(t)
-                        .build();
-
+                Entry updated = new EntryBuilder().setName(activeClient.getContacts().get(index).getName()).setPhone(p).setEmail(e).setType(t).build();
                 activeClient.updateEntry(index, updated);
-                System.out.println("System: Contact updated successfully.");
-            } catch (Exception ex) {
-                System.out.println("Error: " + ex.getMessage());
-            }
+                System.out.println("System: Updated.");
+            } catch (Exception ex) { System.out.println("Error: " + ex.getMessage()); }
+        } else {
+            System.out.println("Error: Invalid index.");
+        }
+    }
+
+    //Delete Contact
+    public static void deleteContact() {
+        if (activeClient.getContacts().isEmpty()) {
+            System.out.println("System: List is empty. Nothing to delete.");
+            return;
+        }
+
+        viewContacts();
+        System.out.print("Enter Contact Number to Delete: ");
+        int index = sc.nextInt() - 1;
+
+        if (index >= 0 && index < activeClient.getContacts().size()) {
+            String removedName = activeClient.getContacts().get(index).getName();
+            activeClient.removeEntry(index);
+            System.out.println("System: Contact '" + removedName + "' removed.");
         } else {
             System.out.println("Error: Invalid selection.");
         }
@@ -210,16 +218,17 @@ public class MyContactsApp {
             };
         } else {
             System.out.println("\n--- Dashboard (" + activeClient.getMail() + ") ---");
-            System.out.println("1. Profile 2. Settings 3. Add Contact 4. View Contacts 5. Edit Contact 0. Log Out");
+            System.out.println("1. Profile 2. Settings 3. Add Contact 4. View Contacts 5. Edit Contact 6. Delete Contact 0. Log Out");
             System.out.print("Choice: ");
             
             int nav = sc.nextInt();
             switch(nav) {
-                case 1 -> System.out.println("Info:"+activeClient.getDetail().toString());
+                case 1 -> System.out.println("Info: " + activeClient.getDetail().toString());
                 case 2 -> manageProfile();
                 case 3 -> createContact();
                 case 4 -> viewContacts();
                 case 5 -> editContact();
+                case 6 -> deleteContact(); // UC 7 Trigger
                 case 0 -> { activeClient = null; System.out.println("Logged out."); }
             }
             return true;
@@ -228,9 +237,10 @@ public class MyContactsApp {
 
     public static void main(String[] args) {
         System.out.println("============================================");
-        System.out.println("CONTACT MANAGEMENT SYSTEM");
+        System.out.println("     CONTACT MANAGEMENT SYSTEM");
         System.out.println("============================================");
         boolean isRunning = true;
         while(isRunning) { isRunning = displayMenu(); }
     }
+}
 }
